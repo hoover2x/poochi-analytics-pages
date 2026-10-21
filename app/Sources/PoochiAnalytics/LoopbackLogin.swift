@@ -27,7 +27,7 @@ final class LoopbackLogin {
             try await withCheckedThrowingContinuation { continuation in
                 pending = continuation
                 server.stateUpdateHandler = { [weak self] state in
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
                         guard let self, self.pending != nil else { return }
                         switch state {
                         case .ready:
@@ -41,7 +41,7 @@ final class LoopbackLogin {
                     }
                 }
                 server.newConnectionHandler = { [weak self] connection in
-                    Task { @MainActor in self?.accept(connection, attempt: attempt, configuration: configuration) }
+                    Task { @MainActor [weak self] in self?.accept(connection, attempt: attempt, configuration: configuration) }
                 }
                 timeout = Task { [weak self] in
                     do { try await Task.sleep(nanoseconds: 180_000_000_000) }
@@ -72,7 +72,7 @@ final class LoopbackLogin {
     private func receive(_ connection: NWConnection, id: UUID, buffered: Data,
                          attempt: OAuthAttempt, configuration: TikTokConfiguration) {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 16_384) { [weak self] data, _, complete, error in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self, self.pending != nil else { connection.cancel(); return }
                 var buffer = buffered
                 if let data { buffer.append(data) }
