@@ -1,0 +1,42 @@
+name: macOS build and tests
+on:
+  push:
+    paths:
+      - 'app/**'
+      - '.github/workflows/macos.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  macos:
+    runs-on: macos-14
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core regression tests and universal macOS app
+        run: bash scripts/build.sh
+      - name: Native sample-data UI smoke test
+        run: |
+          xcodebuild -project PoochiAnalytics.xcodeproj -scheme PoochiAnalytics \
+            -configuration Debug -destination 'platform=macOS' -derivedDataPath build-ui \
+            -resultBundlePath build/Poochi-UI.xcresult CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual test
+      - name: App for local testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: Poochi-Analytics-macOS
+          path: app/build/deliverables/Poochi-Analytics-macOS.zip
+          retention-days: 14
+      - name: Test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Poochi-test-results
+          path: app/build/Poochi-UI.xcresult
+          if-no-files-found: ignore
+          retention-days: 14
