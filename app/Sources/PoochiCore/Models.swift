@@ -127,9 +127,11 @@ public enum SampleData {
                 title: title, duration: 18 + index * 3, viewCount: Int64(1200 + (7 - index) * 1120),
                 likeCount: Int64(88 + (7 - index) * 70), commentCount: Int64(6 + index * 3), shareCount: Int64(4 + index * 4))
         }
-        let observations = (0..<7).map { index in
-            AccountObservation(date: now.addingTimeInterval(Double(index - 6) * 86400),
-                followers: Int64(1160 + index * 20), likes: Int64(26000 + index * 400))
+        let observations: [AccountObservation] = (0..<7).map { (index: Int) -> AccountObservation in
+            let date = now.addingTimeInterval(TimeInterval(index - 6) * 86400)
+            let followers = Int64(1160 + index * 20)
+            let likes = Int64(26000 + index * 400)
+            return AccountObservation(date: date, followers: followers, likes: likes)
         }
         return AnalyticsArchive(profile: profile, videos: videos, observations: observations, updatedAt: now)
     }

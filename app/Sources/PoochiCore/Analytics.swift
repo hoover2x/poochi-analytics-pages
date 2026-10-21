@@ -38,13 +38,20 @@ public enum CSVExport {
     public static func videos(_ videos: [TikTokVideo], observedAt: Date) -> String {
         let iso = ISO8601DateFormatter()
         let header = "video_id,title,posted_at,views,likes,comments,shares,engagement_rate,video_url,observed_at"
-        let rows = videos.map { video in
-            [video.id, video.displayTitle, video.postedAt.map(iso.string) ?? "",
-             video.viewCount.map(String.init) ?? "", video.likeCount.map(String.init) ?? "",
-             video.commentCount.map(String.init) ?? "", video.shareCount.map(String.init) ?? "",
-             video.engagementRate.map { String(format: "%.6f", locale: Locale(identifier: "en_US_POSIX"), $0) } ?? "",
-             video.shareURL?.absoluteString ?? "", iso.string(from: observedAt)]
-                .map(escape).joined(separator: ",")
+        let rows: [String] = videos.map { video -> String in
+            var fields: [String] = [video.id, video.displayTitle]
+            fields.append(video.postedAt.map { iso.string(from: $0) } ?? "")
+            fields.append(video.viewCount.map { String($0) } ?? "")
+            fields.append(video.likeCount.map { String($0) } ?? "")
+            fields.append(video.commentCount.map { String($0) } ?? "")
+            fields.append(video.shareCount.map { String($0) } ?? "")
+            let rate: String = video.engagementRate.map { value in
+                String(format: "%.6f", locale: Locale(identifier: "en_US_POSIX"), value)
+            } ?? ""
+            fields.append(rate)
+            fields.append(video.shareURL?.absoluteString ?? "")
+            fields.append(iso.string(from: observedAt))
+            return fields.map { escape($0) }.joined(separator: ",")
         }
         return ([header] + rows).joined(separator: "\r\n") + "\r\n"
     }
